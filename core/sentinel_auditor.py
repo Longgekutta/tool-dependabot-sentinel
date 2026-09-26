@@ -90,4 +90,13 @@ class DependabotAuditor:
                 remediation="Explicitly specify 'open-pull-requests-limit: 5'."
             ))
 
+        # Check 5: Rebase strategy
+        if "rebase-strategy:" not in content:
+            findings.append(AuditFinding(
+                rule_id="DEP_MISSING_REBASE_STRATEGY",
+                severity=FindingSeverity.INFO,
+                message="No 'rebase-strategy' specified. Default will not auto-rebase when target branch updates.",
+                remediation="Explicitly specify 'rebase-strategy: \"auto\"' for continuous branch synchronization."
+            ))
+
         return findings

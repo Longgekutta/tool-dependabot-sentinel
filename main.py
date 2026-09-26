@@ -71,12 +71,22 @@ def generate_cmd(args) -> int:
         print(f"Error: Target directory does not exist: {target_dir}", file=sys.stderr)
         return 1
 
+    assignees = [a.strip() for a in args.assignees.split(",") if a.strip()] if getattr(args, "assignees", None) else None
+    reviewers = [r.strip() for r in args.reviewers.split(",") if r.strip()] if getattr(args, "reviewers", None) else None
+    ignore_rules = None
+    if getattr(args, "ignore", None):
+        ignore_rules = [{"dependency-name": d.strip(), "update-types": ["version-update:semver-major"]} for d in args.ignore.split(",") if d.strip()]
+
     cfg = DependabotConfig(
         interval=args.interval,
         schedule_day=args.day,
         open_pr_limit=args.limit,
         enable_groups=not args.no_groups,
         commit_prefix=args.prefix,
+        rebase_strategy=getattr(args, "rebase_strategy", "auto"),
+        assignees=assignees,
+        reviewers=reviewers,
+        ignore_rules=ignore_rules,
     )
     generator = DependabotGenerator(cfg)
     out_file = generator.write_config(target_dir)
@@ -132,6 +142,10 @@ def main() -> int:
     p_run.add_argument("--limit", type=int, default=5, help="Open pull requests limit")
     p_run.add_argument("--prefix", default="chore(deps):", help="Commit message prefix")
     p_run.add_argument("--no-groups", action="store_true", help="Disable semantic dependency grouping")
+    p_run.add_argument("--rebase-strategy", default="auto", choices=["auto", "disabled"], help="Rebase strategy for PRs (default: auto)")
+    p_run.add_argument("--assignees", help="Comma-separated GitHub usernames for PR assignees")
+    p_run.add_argument("--reviewers", help="Comma-separated GitHub usernames or teams for PR reviewers")
+    p_run.add_argument("--ignore", help="Comma-separated dependency names to ignore major version bumps")
     p_run.set_defaults(func=run_cmd)
 
     p_test = subparsers.add_parser("test", help="Run hermetic offline unit tests")
@@ -151,6 +165,10 @@ def main() -> int:
     p_gen.add_argument("--limit", type=int, default=5, help="Open pull requests limit")
     p_gen.add_argument("--prefix", default="chore(deps):", help="Commit message prefix")
     p_gen.add_argument("--no-groups", action="store_true", help="Disable semantic dependency grouping")
+    p_gen.add_argument("--rebase-strategy", default="auto", choices=["auto", "disabled"], help="Rebase strategy for PRs (default: auto)")
+    p_gen.add_argument("--assignees", help="Comma-separated GitHub usernames for PR assignees")
+    p_gen.add_argument("--reviewers", help="Comma-separated GitHub usernames or teams for PR reviewers")
+    p_gen.add_argument("--ignore", help="Comma-separated dependency names to ignore major version bumps")
     p_gen.set_defaults(func=generate_cmd)
 
     p_audit = subparsers.add_parser("audit", help="Audit repository for Dependabot anti-patterns")

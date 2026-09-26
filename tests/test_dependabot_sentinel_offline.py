@@ -89,5 +89,47 @@ updates:
             criticals = [f for f in findings if f.severity == FindingSeverity.CRITICAL]
             self.assertEqual(len(criticals), 0)
 
+    def test_06_generate_with_registries_and_ignore(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            (tmp / "requirements.txt").write_text("torch\n", encoding="utf-8")
+            cfg = DependabotConfig(
+                assignees=["alice"],
+                reviewers=["lead-dev"],
+                rebase_strategy="auto",
+                registries={"docker-hub": {"type": "docker-registry", "url": "https://registry.hub.docker.com"}},
+                ignore_rules=[{"dependency-name": "torch", "update-types": ["version-update:semver-major"]}]
+            )
+            gen = DependabotGenerator(cfg)
+            content = gen.generate(detect_ecosystems(tmp))
+            self.assertIn("registries:", content)
+            self.assertIn("docker-hub:", content)
+            self.assertIn("assignees: [\"alice\"]", content)
+            self.assertIn("reviewers: [\"lead-dev\"]", content)
+            self.assertIn("rebase-strategy: \"auto\"", content)
+            self.assertIn("ignore:", content)
+            self.assertIn("dependency-name: \"torch\"", content)
+
+    def test_07_auditor_catches_missing_rebase_strategy(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            gh_dir = tmp / ".github"
+            gh_dir.mkdir(parents=True, exist_ok=True)
+            (gh_dir / "dependabot.yml").write_text("""version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      dev:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+""", encoding="utf-8")
+            auditor = DependabotAuditor()
+            findings = auditor.audit_repo(tmp)
+            rule_ids = [f.rule_id for f in findings]
+            self.assertIn("DEP_MISSING_REBASE_STRATEGY", rule_ids)
+
 if __name__ == "__main__":
     unittest.main()

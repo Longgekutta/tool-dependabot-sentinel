@@ -3,6 +3,12 @@
 > **Dependabot 智能配置与 PR 降噪哨兵**  
 > Universal CLI Facade (UCFS v1.0) 标准实现 | 100% 离线自省 | 语义成组与反疲劳巡检
 
+> [!NOTE]
+> **第一性原理架构收敛声明 (Evolution Notice)**:  
+> 本工具所包含的 Dependabot 依赖守护配置与降噪模板，已正式通过第一性原理仲裁并收敛归入高内聚特种技能 [skill-github-ops](file:///D:/github/skill-github-ops)（三级渐进式披露架构）。  
+> 存量代码已冻结并归档保留。在现代 AI 协同中，推荐直接调用 `skill-github-ops` 享受更轻量、零 Token 浪费的最佳实践。
+
+
 ---
 
 ## 🌟 核心价值与实用性痛点解答
